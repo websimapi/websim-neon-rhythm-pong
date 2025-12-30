@@ -205,6 +205,18 @@ h1, h2 {
     letter-spacing: 4px;
 }
 
+.floating-text {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.5rem;
+    pointer-events: none;
+    text-shadow: 0 0 10px var(--neon-cyan);
+    transition: all 0.8s ease-out;
+    z-index: 100;
+}
+
 @keyframes blink {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.3; transform: scale(0.95); }

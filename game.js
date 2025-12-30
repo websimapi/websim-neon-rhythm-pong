@@ -270,7 +270,7 @@ export class GameEngine {
         
         // Rhythm Check
         // We check if a beat occurred recently (within 100ms)
-        const now = this.audio.ctx.currentTime;
+        const now = this.audio.ctx ? this.audio.ctx.currentTime : 0;
         const timeSinceBeat = now - this.audio.lastBeatTime;
         // Or check against predicted next beat
         
@@ -304,8 +304,20 @@ export class GameEngine {
     }
     
     displayFloatingText(text, x, y) {
-        // Ideally pass this to renderer, but for simplicity:
-        // We will just let the combo counter handle excitement
+        const el = document.createElement('div');
+        el.className = 'floating-text';
+        el.innerText = text;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        document.getElementById('game-container').appendChild(el);
+        
+        // Trigger reflow
+        el.offsetHeight; 
+        
+        el.style.top = (y - 100) + 'px';
+        el.style.opacity = '0';
+        
+        setTimeout(() => el.remove(), 800);
     }
 
     gameOver() {
