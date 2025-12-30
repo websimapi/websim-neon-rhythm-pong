@@ -19,13 +19,14 @@ export class GameEngine {
         this.beatLines = []; // Y positions of falling beat markers
         
         // Physics constants relative to screen size
-        this.speedBase = 0.008; // Base Ball Speed factor
+        this.speedBase = 0; // Will be set on resetBall
         
         // Beat tracking
         this.lastBeatTime = 0;
         
         // Difficulty
-        this.bpm = 120;
+        this.bpm = 100;
+        this.paddleCharged = false; // Rhythm mechanic
 
         // AI Profiles
         this.aiProfiles = [
@@ -87,9 +88,12 @@ export class GameEngine {
         this.ball.y = this.renderer.height / 2;
         // Pixel based velocity
         const speed = this.renderer.height / 120; // Scale speed with height
+        if (this.speedBase === 0) this.speedBase = speed; // Initialize base ref
+        
         this.ball.vx = (Math.random() > 0.5 ? 1 : -1) * speed * 0.5; 
         this.ball.vy = -speed; // Send to opponent first
         this.ball.active = true;
+        this.paddleCharged = false;
     }
 
     handleBeat(type) {
@@ -157,7 +161,46 @@ export class GameEngine {
     update(dt) {
         if (!this.running) return;
 
-        // 1. Update Player Paddle
+        // 0. Input & Rhythm Check
+        if (this.input.justTapped) {
+            const syncAccuracy = this.audio.checkSync();
+            if (syncAccuracy > 0) {
+                // RHYTHM HIT
+                this.paddleCharged = true;
+                this.renderer.createExplosion(this.paddle.x * this.renderer.width, this.renderer.height - 50, '#00ff00');
+                
+                // Effect on ball: "Sway" / Push
+                // If ball is moving away, boost it
+                if (this.ball.vy < 0 && this.ball.active) {
+                    this.ball.vy *= 1.2; // Boost speed
+                    this.ball.vx += (Math.random() - 0.5) * 2; // Add curve
+                    this.displayFloatingText("BOOST!", this.ball.x, this.ball.y);
+                    this.renderer.createExplosion(this.ball.x, this.ball.y, '#ffff00');
+                }
+            } else {
+                // Off beat
+                this.paddleCharged = false;
+            }
+        }
+        this.input.reset(); // Consume input
+
+        // 1. Update Ball Speed -> BPM
+        if (this.ball.active) {
+            const speedSq = this.ball.vx*this.ball.vx + this.ball.vy*this.ball.vy;
+            const currentSpeed = Math.sqrt(speedSq);
+            // Map speed to BPM
+            // Base speed ~ height/120. Max speed maybe 3x base?
+            const ratio = currentSpeed / (this.renderer.height / 120);
+            // Map ratio 1.0 -> 100bpm, 3.0 -> 180bpm
+            let targetBpm = 100 + (ratio - 1) * 40;
+            targetBpm = Math.max(80, Math.min(220, targetBpm));
+            
+            // Lerp BPM
+            this.bpm += (targetBpm - this.bpm) * 0.05;
+            this.audio.setBpm(this.bpm);
+        }
+
+        // 2. Update Player Paddle
         if (this.attractMode && this.ball.active) {
             this.updateAI(this.paddle, this.playerAi);
         } else {
@@ -176,6 +219,11 @@ export class GameEngine {
         if (this.ball.active) {
             this.ball.x += this.ball.vx * dt * 60; 
             this.ball.y += this.ball.vy * dt * 60;
+
+            // Decay paddle charge
+            if (this.paddleCharged && Math.random() < 0.1) {
+                this.renderer.createExplosion(this.paddle.x * this.renderer.width + (Math.random()-0.5)*50, this.renderer.height - 50, '#ccff00');
+            }
             
             // Side Wall collisions
             if (this.ball.x < this.ball.radius) {
@@ -315,18 +363,9 @@ export class GameEngine {
         this.ball.vx += offsetFromCenter * 0.1;
         
         // Rhythm Check
-        // We check if a beat occurred recently (within 100ms)
-        const now = this.audio.ctx ? this.audio.ctx.currentTime : 0;
-        const timeSinceBeat = now - this.audio.lastBeatTime;
-        // Or check against predicted next beat
-        
-        // Simplified "Rhythm" bonus: High energy = better score
-        let isRhythmHit = false;
-        
-        // If the background is still pulsing from a beat (pulse decays from 1.0)
-        if (this.renderer.bgPulse > 0.5) {
-            isRhythmHit = true;
-        }
+        // If paddle was charged by a recent tap
+        let isRhythmHit = this.paddleCharged;
+        this.paddleCharged = false; // Consume charge
         
         if (isRhythmHit) {
             this.combo++;
@@ -335,6 +374,9 @@ export class GameEngine {
             this.renderer.createExplosion(this.ball.x, this.ball.y, '#00ff00'); // Green perfect
             this.audio.playSample('perfect');
             this.displayFloatingText("PERFECT", this.ball.x, this.ball.y);
+            
+            // Super speed return
+            this.ball.vy *= 1.5;
         } else {
             this.score += 50 * this.multiplier;
             this.renderer.createExplosion(this.ball.x, this.ball.y, '#00f3ff'); // Blue normal

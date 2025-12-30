@@ -89,16 +89,23 @@ export class Renderer {
         this.ctx.restore();
     }
 
-    drawPaddle(x, y, width, height, color) {
+    drawPaddle(x, y, width, height, color, isCharged) {
         this.ctx.save();
-        this.ctx.shadowBlur = 20;
-        this.ctx.shadowColor = color;
-        this.ctx.fillStyle = color;
+        this.ctx.shadowBlur = isCharged ? 40 : 20;
+        this.ctx.shadowColor = isCharged ? '#00ff00' : color;
+        this.ctx.fillStyle = isCharged ? '#ccff00' : color;
         this.ctx.fillRect(x - width/2, y - height/2, width, height);
         
         // Inner core
         this.ctx.fillStyle = "#fff";
         this.ctx.fillRect(x - width/2 + 2, y - height/2 + 2, width - 4, height - 4);
+        
+        if (isCharged) {
+            this.ctx.strokeStyle = '#fff';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(x - width/2 - 4, y - height/2 - 4, width + 8, height + 8);
+        }
+
         this.ctx.restore();
     }
 

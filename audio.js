@@ -8,11 +8,15 @@ export class AudioManager {
         this.source = null;
         this.buffers = {};
         this.isPlaying = false;
-        this.bpm = 128; // Default
+        this.bpm = 100; // Default
+        this.targetBpm = 100;
         this.lastBeatTime = 0;
         this.beatThreshold = 0.6; // For analyzing custom audio
         this.mode = 'procedural'; // 'procedural' or 'upload'
         
+        // Beat Tracking for Gameplay
+        this.scheduledBeats = []; // Times of recent/upcoming beats
+
         // Procedural sequencing
         this.nextNoteTime = 0;
         this.current16thNote = 0;
@@ -137,6 +141,13 @@ export class AudioManager {
     }
 
     scheduleNote(beatNumber, time) {
+        // Track Beat Times for Sync
+        if (beatNumber % 4 === 0) {
+            this.scheduledBeats.push(time);
+            // Cleanup old beats
+            this.scheduledBeats = this.scheduledBeats.filter(t => t > this.ctx.currentTime - 1.0);
+        }
+
         // Simple Techno Pattern
         // Kick on 0, 4, 8, 12
         if (beatNumber % 4 === 0) {
@@ -252,6 +263,27 @@ export class AudioManager {
             osc.start(t);
             osc.stop(t + 0.3);
         }
+    }
+
+    setBpm(bpm) {
+        // Smoothly adjust, or instant? Instant is better for responsive mechanics
+        this.bpm = bpm;
+    }
+
+    checkSync() {
+        if (!this.ctx) return 0;
+        const now = this.ctx.currentTime;
+        // Check if we are close to a beat
+        // Look through scheduled beats
+        const window = 0.15; // 150ms leniency
+        
+        for (let t of this.scheduledBeats) {
+            const diff = Math.abs(t - now);
+            if (diff < window) {
+                return 1 - (diff / window); // Return "accuracy" 0 to 1
+            }
+        }
+        return 0;
     }
 
     // --- Analysis Loop for Uploaded Music ---
