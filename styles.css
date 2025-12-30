@@ -1,0 +1,184 @@
+:root {
+    --neon-cyan: #00f3ff;
+    --neon-pink: #ff00ff;
+    --neon-lime: #ccff00;
+    --bg-color: #050505;
+    --glass-bg: rgba(0, 20, 40, 0.85);
+}
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    font-family: 'Courier New', Courier, monospace;
+    color: white;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* UI Layer */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.hud-label {
+    font-size: 0.8rem;
+    color: var(--neon-cyan);
+    opacity: 0.7;
+    letter-spacing: 2px;
+}
+
+#score-val, #multiplier-val {
+    font-size: 2rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--neon-cyan);
+}
+
+#multiplier-val {
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+}
+
+#combo-display {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    opacity: 0; /* Hidden by default, shown via JS */
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+#combo-val {
+    font-size: 4rem;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--neon-lime);
+    text-shadow: 4px 4px 0px rgba(0,0,0,0.5), 0 0 20px var(--neon-lime);
+}
+
+/* Glass Panels */
+.glass-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--neon-cyan);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+    padding: 2rem;
+    text-align: center;
+    border-radius: 8px;
+    z-index: 10;
+    transition: opacity 0.3s;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none; /* simple hide */
+}
+
+/* Typography & Buttons */
+h1, h2 {
+    margin: 0 0 1rem 0;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.glitch-text {
+    position: relative;
+    color: white;
+    font-size: 2rem;
+}
+
+.danger-text {
+    color: red;
+    text-shadow: 0 0 10px red;
+}
+
+.neon-btn {
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-family: inherit;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.neon-btn:hover, .neon-btn:active {
+    background: var(--neon-cyan);
+    color: black;
+    box-shadow: 0 0 20px var(--neon-cyan);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.btn-select, .btn-file {
+    display: block;
+    padding: 10px;
+    border: 1px solid #333;
+    background: rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-select.active {
+    border-color: var(--neon-pink);
+    background: rgba(255, 0, 255, 0.1);
+}
+
+.btn-file input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    cursor: pointer;
+}
+
+.btn-file:hover {
+    border-color: var(--neon-lime);
+}

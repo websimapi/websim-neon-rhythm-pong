@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Rhythm Pong</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- UI Overlay -->
+        <div id="ui-layer">
+            <div id="score-display">
+                <div class="hud-label">SCORE</div>
+                <div id="score-val">0</div>
+            </div>
+            <div id="multiplier-display">
+                <div class="hud-label">SYNC</div>
+                <div id="multiplier-val">1x</div>
+            </div>
+            <div id="combo-display">
+                <div id="combo-val">0</div>
+                <div class="hud-label">COMBO</div>
+            </div>
+        </div>
+
+        <!-- Main Menu / Modal -->
+        <div id="menu-overlay" class="glass-panel">
+            <h1 class="glitch-text" data-text="RHYTHM PONG">RHYTHM PONG</h1>
+            <div class="menu-content">
+                <p>DRAG to Move. HIT the ball on the BEAT.</p>
+                
+                <div class="control-group">
+                    <label class="btn-select active" id="mode-procedural">
+                        <span>PROCEDURAL BEATS</span>
+                    </label>
+                    <label class="btn-file">
+                        <span>UPLOAD MP3</span>
+                        <input type="file" id="audio-upload" accept="audio/*">
+                    </label>
+                </div>
+
+                <button id="start-btn" class="neon-btn">INITIALIZE SYSTEM</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-overlay" class="glass-panel hidden">
+            <h2 class="danger-text">SYSTEM FAILURE</h2>
+            <p>FINAL SCORE: <span id="final-score">0</span></p>
+            <button id="restart-btn" class="neon-btn">REBOOT</button>
+        </div>
+    </div>
+
+    <!-- Import Map for potential external libs (not used heavily to keep it vanilla optimized) -->
+    <script type="importmap">
+    {
+        "imports": {}
+    }
+    </script>
+    <script type="module" src="main.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
