@@ -26,6 +26,17 @@ export class GameEngine {
         
         // Difficulty
         this.bpm = 120;
+
+        // AI Profiles
+        this.aiProfiles = [
+            { name: 'Standard', speed: 0.08, prediction: 0.0, error: 0.02 },
+            { name: 'Sniper', speed: 0.05, prediction: 1.0, error: 0.0 }, // Predicts perfectly, slower move
+            { name: 'Rusher', speed: 0.18, prediction: 0.0, error: 0.15 }, // Fast but jittery/imperfect
+            { name: 'Tank', speed: 0.03, prediction: 1.2, error: 0.0 }, // Very slow, predicts ahead
+            { name: 'Glitch', speed: 0.25, prediction: -0.1, error: 0.25 } // Extremely fast, erratic
+        ];
+        this.currentAi = this.aiProfiles[0];
+        this.playerAi = this.aiProfiles[0];
     }
 
     start() {
@@ -36,6 +47,11 @@ export class GameEngine {
         this.multiplier = 1;
         this.playerLives = 3;
         this.cpuLives = 3;
+        
+        // Randomize CPU AI
+        this.currentAi = this.aiProfiles[Math.floor(Math.random() * this.aiProfiles.length)];
+        console.log("VS CPU:", this.currentAi.name);
+        
         this.updateUI();
         
         // Reset positions
@@ -58,6 +74,11 @@ export class GameEngine {
         this.score = 0;
         this.playerLives = 3;
         this.cpuLives = 3;
+        
+        // Randomize both AIs for attract mode
+        this.currentAi = this.aiProfiles[Math.floor(Math.random() * this.aiProfiles.length)];
+        this.playerAi = this.aiProfiles[Math.floor(Math.random() * this.aiProfiles.length)];
+        
         this.resetBall();
     }
     
@@ -102,15 +123,43 @@ export class GameEngine {
         });
     }
 
+    updateAI(paddle, profile) {
+        if (!this.ball.active) return;
+        
+        let targetX = this.ball.x;
+
+        // Prediction: Calculate where ball will intersect paddle's Y plane
+        const paddleY = (paddle === this.opponent) ? 50 : this.renderer.height - 50;
+        const distY = paddleY - this.ball.y;
+        const movingTowards = (paddle === this.opponent) ? (this.ball.vy < 0) : (this.ball.vy > 0);
+        
+        if (movingTowards && profile.prediction !== 0) {
+            const ticks = distY / (this.ball.vy || 0.001);
+            if (ticks > 0) {
+                targetX += this.ball.vx * ticks * profile.prediction;
+            }
+        }
+        
+        // Artificial Error/Jitter
+        const time = Date.now() / 1000;
+        const noise = Math.sin(time * 5 + (paddle === this.opponent ? 0 : 4)) * this.renderer.width * profile.error;
+        targetX += noise;
+        
+        // Normalize & Clamp
+        let targetNorm = targetX / this.renderer.width;
+        const halfWidth = paddle.width / 2;
+        targetNorm = Math.max(halfWidth, Math.min(1 - halfWidth, targetNorm));
+        
+        // Move with profile speed
+        paddle.x += (targetNorm - paddle.x) * profile.speed;
+    }
+
     update(dt) {
         if (!this.running) return;
 
         // 1. Update Player Paddle
         if (this.attractMode && this.ball.active) {
-            // AI plays for player
-            const ballNormX = this.ball.x / this.renderer.width;
-            const lerpSpeed = 0.08;
-            this.paddle.x += (ballNormX - this.paddle.x) * lerpSpeed;
+            this.updateAI(this.paddle, this.playerAi);
         } else {
             const targetPixelX = this.input.pointerX * this.renderer.width;
             const currentPixelX = this.paddle.x * this.renderer.width;
@@ -119,11 +168,8 @@ export class GameEngine {
         }
 
         // 2. Update Opponent (AI)
-        // AI chases ball with reaction delay / smoothness
         if (this.ball.active) {
-            const ballNormX = this.ball.x / this.renderer.width;
-            const lerpSpeed = 0.08; // AI Speed
-            this.opponent.x += (ballNormX - this.opponent.x) * lerpSpeed;
+            this.updateAI(this.opponent, this.currentAi);
         }
         
         // 3. Update Ball
