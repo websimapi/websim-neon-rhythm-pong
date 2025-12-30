@@ -80,13 +80,20 @@ function loop(timestamp) {
         renderer.drawBackground(renderer.bgPulse);
         
         // Entities
+        // Player
         const paddleX = game.paddle.x * renderer.width;
         const paddleY = renderer.height - 50;
         const paddleW = game.paddle.width * renderer.width;
         const paddleH = game.paddle.height;
-        
         renderer.drawPaddle(paddleX, paddleY, paddleW, paddleH, '#00f3ff');
         
+        // Opponent
+        const aiX = game.opponent.x * renderer.width;
+        const aiY = 50;
+        const aiW = game.opponent.width * renderer.width;
+        const aiH = game.opponent.height;
+        renderer.drawPaddle(aiX, aiY, aiW, aiH, '#ff0055');
+
         renderer.drawBeatLines(game.beatLines);
 
         if (game.ball.active) {

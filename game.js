@@ -10,7 +10,8 @@ export class GameEngine {
         this.combo = 0;
         
         this.paddle = { x: 0.5, width: 0.2, height: 20, targetX: 0.5 };
-        this.ball = { x: 0.5, y: 0.5, vx: 0.005, vy: 0.005, radius: 8, active: false };
+        this.opponent = { x: 0.5, width: 0.2, height: 20 };
+        this.ball = { x: 0, y: 0, vx: 0, vy: 0, radius: 12, active: false };
         this.powerups = []; // {x, y, type, radius, color}
         this.beatLines = []; // Y positions of falling beat markers
         
@@ -41,10 +42,12 @@ export class GameEngine {
     }
     
     resetBall() {
-        this.ball.x = 0.5;
-        this.ball.y = 0.2;
-        this.ball.vx = (Math.random() > 0.5 ? 1 : -1) * (this.renderer.width / 1500) * 4; // Randomized X
-        this.ball.vy = Math.abs(this.renderer.height / 1000) * 4;
+        this.ball.x = this.renderer.width / 2;
+        this.ball.y = this.renderer.height / 2;
+        // Pixel based velocity
+        const speed = this.renderer.height / 120; // Scale speed with height
+        this.ball.vx = (Math.random() > 0.5 ? 1 : -1) * speed * 0.5; 
+        this.ball.vy = -speed; // Send to opponent first
         this.ball.active = true;
     }
 
@@ -82,47 +85,77 @@ export class GameEngine {
     update(dt) {
         if (!this.running) return;
 
-        // 1. Update Paddle
+        // 1. Update Player Paddle
         const targetPixelX = this.input.pointerX * this.renderer.width;
-        // Smooth lerp
         const currentPixelX = this.paddle.x * this.renderer.width;
-        const newPixelX = currentPixelX + (targetPixelX - currentPixelX) * 0.2; // Lerp factor
+        const newPixelX = currentPixelX + (targetPixelX - currentPixelX) * 0.2;
         this.paddle.x = newPixelX / this.renderer.width;
-        
-        // 2. Update Ball
+
+        // 2. Update Opponent (AI)
+        // AI chases ball with reaction delay / smoothness
         if (this.ball.active) {
-            this.ball.x += this.ball.vx * dt * 60; // Normalize to 60fps
+            const ballNormX = this.ball.x / this.renderer.width;
+            const lerpSpeed = 0.08; // AI Speed
+            this.opponent.x += (ballNormX - this.opponent.x) * lerpSpeed;
+        }
+        
+        // 3. Update Ball
+        if (this.ball.active) {
+            this.ball.x += this.ball.vx * dt * 60; 
             this.ball.y += this.ball.vy * dt * 60;
             
-            // Wall collisions
-            if (this.ball.x < 0 || this.ball.x > this.renderer.width) {
+            // Side Wall collisions
+            if (this.ball.x < this.ball.radius) {
+                this.ball.x = this.ball.radius;
                 this.ball.vx *= -1;
-                this.ball.x = Math.max(0, Math.min(this.renderer.width, this.ball.x));
+                this.audio.playSfx('hit');
+            } else if (this.ball.x > this.renderer.width - this.ball.radius) {
+                this.ball.x = this.renderer.width - this.ball.radius;
+                this.ball.vx *= -1;
                 this.audio.playSfx('hit');
             }
-            if (this.ball.y < 0) {
-                this.ball.vy *= -1;
-                this.audio.playSfx('hit');
+
+            // Opponent Collision (Top)
+            const aiY = 50;
+            const aiW = this.opponent.width * this.renderer.width;
+            const aiLeft = (this.opponent.x * this.renderer.width) - aiW/2;
+            const aiRight = aiLeft + aiW;
+
+            if (this.ball.y - this.ball.radius <= aiY + this.opponent.height/2 && 
+                this.ball.y + this.ball.radius >= aiY - this.opponent.height/2 &&
+                this.ball.vy < 0) {
+                
+                if (this.ball.x >= aiLeft - this.ball.radius && this.ball.x <= aiRight + this.ball.radius) {
+                    this.ball.vy *= -1;
+                    // Add slight random deflection
+                    this.ball.vx += (Math.random() - 0.5) * 2;
+                    this.audio.playSfx('hit');
+                    this.renderer.createExplosion(this.ball.x, this.ball.y, '#ff0055');
+                }
+            } else if (this.ball.y < 0) {
+                 // Hit top wall (AI missed - shouldn't happen often with simple AI, but bounce anyway)
+                 this.ball.vy *= -1;
+                 this.audio.playSfx('hit');
             }
             
-            // Paddle Collision
+            // Player Paddle Collision
             const paddleY = this.renderer.height - 50;
             const paddleW = this.paddle.width * this.renderer.width;
             const paddleLeft = (this.paddle.x * this.renderer.width) - paddleW/2;
             const paddleRight = paddleLeft + paddleW;
             
-            if (this.ball.y + this.ball.radius >= paddleY && 
-                this.ball.y - this.ball.radius <= paddleY + this.paddle.height &&
+            if (this.ball.y + this.ball.radius >= paddleY - this.paddle.height/2 && 
+                this.ball.y - this.ball.radius <= paddleY + this.paddle.height/2 &&
                 this.ball.vy > 0) {
                 
-                if (this.ball.x >= paddleLeft && this.ball.x <= paddleRight) {
+                if (this.ball.x >= paddleLeft - this.ball.radius && this.ball.x <= paddleRight + this.ball.radius) {
                     // HIT!
                     this.handleHit(this.ball.x - (paddleLeft + paddleW/2));
                 }
             }
             
             // Death
-            if (this.ball.y > this.renderer.height) {
+            if (this.ball.y > this.renderer.height + 50) {
                 this.gameOver();
             }
         }
