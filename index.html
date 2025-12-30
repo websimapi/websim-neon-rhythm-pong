@@ -12,6 +12,8 @@
         
         <!-- UI Overlay -->
         <div id="ui-layer">
+            <div id="player-lives" class="lives lives-player"></div>
+            <div id="cpu-lives" class="lives lives-cpu"></div>
             <div id="score-display">
                 <div class="hud-label">SCORE</div>
                 <div id="score-val">0</div>
@@ -26,24 +28,9 @@
             </div>
         </div>
 
-        <!-- Main Menu / Modal -->
-        <div id="menu-overlay" class="glass-panel">
-            <h1 class="glitch-text" data-text="RHYTHM PONG">RHYTHM PONG</h1>
-            <div class="menu-content">
-                <p>RALLY against the AI. HIT the ball on the BEAT.</p>
-                
-                <div class="control-group">
-                    <label class="btn-select active" id="mode-procedural">
-                        <span>PROCEDURAL BEATS</span>
-                    </label>
-                    <label class="btn-file">
-                        <span>UPLOAD MP3</span>
-                        <input type="file" id="audio-upload" accept="audio/*">
-                    </label>
-                </div>
-
-                <button id="start-btn" class="neon-btn">INITIALIZE SYSTEM</button>
-            </div>
+        <!-- Tap To Start Overlay -->
+        <div id="start-overlay">
+            <div class="blink-text">TAP TO START</div>
         </div>
 
         <!-- Game Over Screen -->

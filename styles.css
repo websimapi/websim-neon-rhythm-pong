@@ -82,6 +82,46 @@ canvas {
     text-shadow: 4px 4px 0px rgba(0,0,0,0.5), 0 0 20px var(--neon-lime);
 }
 
+/* Lives HUD */
+.lives {
+    position: absolute;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.lives-player {
+    bottom: 20px;
+    left: 20px;
+}
+
+.lives-cpu {
+    top: 20px;
+    right: 20px;
+    flex-direction: row-reverse;
+}
+
+.life-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--neon-cyan);
+    border: 1px solid var(--neon-cyan);
+    background: radial-gradient(circle at 30% 30%, #ffffff, var(--neon-cyan));
+}
+
+.lives-cpu .life-dot {
+    box-shadow: 0 0 10px var(--neon-pink);
+    border-color: var(--neon-pink);
+    background: radial-gradient(circle at 30% 30%, #ffffff, var(--neon-pink));
+}
+
+.life-dot.off {
+    opacity: 0.2;
+    box-shadow: none;
+    background: transparent;
+}
+
 /* Glass Panels */
 .glass-panel {
     position: absolute;
@@ -114,12 +154,6 @@ h1, h2 {
     letter-spacing: 4px;
 }
 
-.glitch-text {
-    position: relative;
-    color: white;
-    font-size: 2rem;
-}
-
 .danger-text {
     color: red;
     text-shadow: 0 0 10px red;
@@ -146,39 +180,32 @@ h1, h2 {
     box-shadow: 0 0 20px var(--neon-cyan);
 }
 
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 20px 0;
-}
-
-.btn-select, .btn-file {
-    display: block;
-    padding: 10px;
-    border: 1px solid #333;
-    background: rgba(0,0,0,0.5);
-    cursor: pointer;
-    transition: 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-select.active {
-    border-color: var(--neon-pink);
-    background: rgba(255, 0, 255, 0.1);
-}
-
-.btn-file input {
+/* Start Overlay */
+#start-overlay {
     position: absolute;
-    opacity: 0;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    left: 0;
-    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    background: rgba(0,0,0,0.3);
     cursor: pointer;
+    transition: opacity 0.5s;
 }
 
-.btn-file:hover {
-    border-color: var(--neon-lime);
+.blink-text {
+    font-size: 2.5rem;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 20px var(--neon-cyan);
+    animation: blink 1.5s infinite;
+    font-weight: bold;
+    letter-spacing: 4px;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.95); }
 }

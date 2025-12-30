@@ -17,45 +17,29 @@ window.addEventListener('resize', () => {
 renderer.resize();
 
 // UI Handling
-const menu = document.getElementById('menu-overlay');
+const startOverlay = document.getElementById('start-overlay');
 const gameOverScreen = document.getElementById('game-over-overlay');
-const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
-const audioUpload = document.getElementById('audio-upload');
-const modeProcedural = document.getElementById('mode-procedural');
 
-let selectedMode = 'procedural';
+// Initialize Attract Mode
+game.startAttractMode();
 
-// Mode Selection
-modeProcedural.addEventListener('click', () => {
-    selectedMode = 'procedural';
-    modeProcedural.classList.add('active');
-    audioUpload.parentElement.classList.remove('active');
-    audio.setMode('procedural');
-});
-
-audioUpload.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        selectedMode = 'upload';
-        modeProcedural.classList.remove('active');
-        audioUpload.parentElement.classList.add('active');
-        
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            audio.setMode('upload', evt.target.result);
-        };
-        reader.readAsArrayBuffer(file);
+// Start Game Interaction
+function startGame() {
+    if (game.attractMode) {
+        audio.init().then(() => {
+            audio.resume();
+            startOverlay.classList.add('hidden');
+            game.start();
+        });
     }
-});
+}
 
-// Start Game
-startBtn.addEventListener('click', async () => {
-    await audio.init(); // Must be user triggered
-    audio.resume();
-    menu.classList.add('hidden');
-    game.start();
-    loop();
+// Global click/tap listener for start
+startOverlay.addEventListener('click', startGame);
+startOverlay.addEventListener('touchstart', (e) => {
+    // e.preventDefault();
+    startGame();
 });
 
 // Restart Game
@@ -69,8 +53,11 @@ restartBtn.addEventListener('click', () => {
 let lastTime = 0;
 function loop(timestamp) {
     if (!lastTime) lastTime = timestamp;
-    const dt = (timestamp - lastTime) / 1000;
+    let dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
+
+    // Safety check to prevent NaN propagation or huge jumps
+    if (isNaN(dt) || dt > 0.1) dt = 0.016;
 
     if (game.running) {
         renderer.clear();
@@ -108,3 +95,6 @@ function loop(timestamp) {
     
     requestAnimationFrame(loop);
 }
+
+// Start the game loop immediately for attract mode
+requestAnimationFrame(loop);

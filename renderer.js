@@ -47,20 +47,39 @@ export class Renderer {
         // Vertical perspective lines
         for (let i = 0; i <= 10; i++) {
             const x = (i / 10) * this.width;
-            // Perspective transform emulation
+            // Perspective transform emulation (Tunnel center)
             const vanishX = this.width / 2;
-            const vanishY = this.height * 0.4;
+            const vanishY = this.height * 0.5;
             
+            // Floor
             this.ctx.moveTo(x, this.height);
-            this.ctx.lineTo(vanishX + (x - vanishX) * 0.2, vanishY);
+            this.ctx.lineTo(vanishX + (x - vanishX) * 0.1, vanishY + 20);
+            
+            // Ceiling
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(vanishX + (x - vanishX) * 0.1, vanishY - 20);
         }
         
         // Horizontal moving lines (pseudo-3d)
         const time = performance.now() / 1000;
-        const offset = (time * 100) % 100;
-        for (let i = 0; i < 10; i++) {
-            const y = this.height - (i * 100 + offset);
-            if (y > this.height * 0.4) {
+        const offset = (time * 150) % 150;
+        
+        // Floor lines
+        for (let i = 0; i < 8; i++) {
+            // Exponential spacing for depth
+            const dist = (i * 150 + offset);
+            const y = this.height - dist * (dist/1000); // curve
+            if (y > this.height * 0.5) {
+                this.ctx.moveTo(0, y);
+                this.ctx.lineTo(this.width, y);
+            }
+        }
+        
+        // Ceiling lines
+        for (let i = 0; i < 8; i++) {
+            const dist = (i * 150 + offset);
+            const y = dist * (dist/1000);
+            if (y < this.height * 0.5) {
                 this.ctx.moveTo(0, y);
                 this.ctx.lineTo(this.width, y);
             }
