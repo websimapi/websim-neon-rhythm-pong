@@ -6,6 +6,7 @@ export class AudioManager {
         this.ctx = null;
         this.analyser = null;
         this.source = null;
+        this.buffers = {};
         this.isPlaying = false;
         this.bpm = 128; // Default
         this.lastBeatTime = 0;
@@ -33,6 +34,41 @@ export class AudioManager {
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0.8;
         this.masterGain.connect(this.ctx.destination);
+
+        await this.loadAssets();
+    }
+
+    async loadAssets() {
+        const paths = {
+            'gameover': '/voice_gameover.mp3',
+            'powerup': '/voice_powerup.mp3',
+            'perfect': '/voice_perfect.mp3'
+        };
+
+        for (const [key, path] of Object.entries(paths)) {
+            try {
+                const response = await fetch(path);
+                const arrayBuffer = await response.arrayBuffer();
+                this.buffers[key] = await this.ctx.decodeAudioData(arrayBuffer);
+            } catch (e) {
+                console.error('Audio asset missing:', path);
+            }
+        }
+    }
+
+    playSample(name) {
+        if (!this.ctx || !this.buffers[name]) return;
+        
+        const source = this.ctx.createBufferSource();
+        source.buffer = this.buffers[name];
+        
+        // Create a separate gain for samples to mix them nicely
+        const sfxGain = this.ctx.createGain();
+        sfxGain.gain.value = 1.2; // Boost voices slightly
+        sfxGain.connect(this.masterGain);
+        
+        source.connect(sfxGain);
+        source.start(0);
     }
 
     resume() {

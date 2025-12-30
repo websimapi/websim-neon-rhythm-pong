@@ -52,6 +52,9 @@ export class GameEngine {
         // Visual pulse
         this.renderer.bgPulse = 1.0;
         
+        // Spawn Visual Beat Line at top
+        this.beatLines.push({ y: 0, alpha: 0.8 });
+
         // Spawn Powerup logic?
         if (this.combo > 5 && Math.random() < 0.1) {
             this.spawnPowerup();
@@ -124,7 +127,18 @@ export class GameEngine {
             }
         }
         
-        // 3. Update Powerups
+        // 3. Update Beat Lines
+        const lineSpeed = this.renderer.height * 0.6; // Screen height per ~1.6s
+        for (let i = this.beatLines.length - 1; i >= 0; i--) {
+            let line = this.beatLines[i];
+            line.y += lineSpeed * dt;
+            line.alpha -= 0.3 * dt;
+            if (line.y > this.renderer.height || line.alpha <= 0) {
+                this.beatLines.splice(i, 1);
+            }
+        }
+
+        // 4. Update Powerups
         for (let i = this.powerups.length - 1; i >= 0; i--) {
             let p = this.powerups[i];
             p.y += p.vy;
@@ -142,7 +156,7 @@ export class GameEngine {
             if (dist < p.radius + paddleW/2 && Math.abs(dy) < 20) {
                 this.activatePowerup(p.type);
                 this.powerups.splice(i, 1);
-                this.audio.playSfx('powerup');
+                this.audio.playSample('powerup');
             } else if (p.y > this.renderer.height) {
                 this.powerups.splice(i, 1);
             }
@@ -193,6 +207,7 @@ export class GameEngine {
             this.multiplier = Math.min(8, 1 + Math.floor(this.combo / 5));
             this.score += 100 * this.multiplier;
             this.renderer.createExplosion(this.ball.x, this.ball.y, '#00ff00'); // Green perfect
+            this.audio.playSample('perfect');
             this.displayFloatingText("PERFECT", this.ball.x, this.ball.y);
         } else {
             this.score += 50 * this.multiplier;
@@ -216,6 +231,7 @@ export class GameEngine {
     gameOver() {
         this.running = false;
         this.audio.stop();
+        this.audio.playSample('gameover');
         
         document.getElementById('final-score').innerText = this.score;
         document.getElementById('game-over-overlay').classList.remove('hidden');

@@ -11,7 +11,8 @@ export class Renderer {
         this.chromaticOffset = 0;
         
         // Cache images/assets if needed
-        this.bgImage = null; // Could load the noise texture here
+        this.bgImage = new Image();
+        this.bgImage.src = '/bg_noise.png';
     }
 
     resize() {
@@ -25,6 +26,18 @@ export class Renderer {
     }
 
     drawBackground(beatIntensity) {
+        // Draw Noise Texture
+        if (this.bgImage.complete) {
+            this.ctx.save();
+            this.ctx.globalAlpha = 0.05 + (beatIntensity * 0.05);
+            this.ctx.globalCompositeOperation = 'overlay';
+            
+            // Tile the noise slightly to ensure coverage or just stretch
+            // Stretcing is cheaper for full screen canvas
+            this.ctx.drawImage(this.bgImage, 0, 0, this.width, this.height);
+            this.ctx.restore();
+        }
+
         // Grid
         this.ctx.save();
         this.ctx.strokeStyle = `rgba(0, 243, 255, ${0.1 + beatIntensity * 0.2})`;
@@ -101,14 +114,17 @@ export class Renderer {
         this.chromaticOffset *= 0.9;
     }
     
-    drawBeatLines(beatYPositions) {
+    drawBeatLines(lines) {
         // Visual indicator of the "Rhythm Line" falling
+        if (!lines || lines.length === 0) return;
+
         this.ctx.save();
-        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
         this.ctx.lineWidth = 2;
         
-        beatYPositions.forEach(y => {
+        lines.forEach(line => {
+            const y = line.y;
             if (y > 0 && y < this.height) {
+                this.ctx.strokeStyle = `rgba(255, 0, 255, ${line.alpha || 0.3})`;
                 this.ctx.beginPath();
                 this.ctx.moveTo(0, y);
                 this.ctx.lineTo(this.width, y);

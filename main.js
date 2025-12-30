@@ -87,6 +87,8 @@ function loop(timestamp) {
         
         renderer.drawPaddle(paddleX, paddleY, paddleW, paddleH, '#00f3ff');
         
+        renderer.drawBeatLines(game.beatLines);
+
         if (game.ball.active) {
             renderer.drawBall(game.ball.x, game.ball.y, game.ball.radius, '#ff00ff');
         }
