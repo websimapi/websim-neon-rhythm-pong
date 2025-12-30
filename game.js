@@ -8,8 +8,6 @@ export class GameEngine {
         this.score = 0;
         this.multiplier = 1;
         this.combo = 0;
-        this.playerLives = 3;
-        this.cpuLives = 3;
         
         this.paddle = { x: 0.5, width: 0.2, height: 20, targetX: 0.5 };
         this.opponent = { x: 0.5, width: 0.2, height: 20 };
@@ -32,14 +30,7 @@ export class GameEngine {
         this.score = 0;
         this.combo = 0;
         this.multiplier = 1;
-        this.playerLives = 3;
-        this.cpuLives = 3;
         this.updateUI();
-        
-        // Reset positions
-        this.opponent.x = 0.5;
-        this.paddle.x = 0.5;
-        this.paddle.width = 0.2; // Reset size powerups
         
         this.resetBall();
         
@@ -141,14 +132,10 @@ export class GameEngine {
                     this.audio.playSfx('hit');
                     this.renderer.createExplosion(this.ball.x, this.ball.y, '#ff0055');
                 }
-            } else if (this.ball.y + this.ball.radius < 0) {
-                // CPU missed: lose a life and reset ball
-                if (this.cpuLives > 0) {
-                    this.cpuLives -= 1;
-                }
-                this.score += 200; // reward player for getting past CPU
-                this.resetBall();
-                this.updateUI();
+            } else if (this.ball.y < 0) {
+                 // Hit top wall (AI missed - shouldn't happen often with simple AI, but bounce anyway)
+                 this.ball.vy *= -1;
+                 this.audio.playSfx('hit');
             }
             
             // Player Paddle Collision
@@ -167,17 +154,9 @@ export class GameEngine {
                 }
             }
             
-            // Death / player miss
-            if (this.ball.y - this.ball.radius > this.renderer.height) {
-                if (this.playerLives > 0) {
-                    this.playerLives -= 1;
-                }
-                if (this.playerLives <= 0) {
-                    this.gameOver();
-                } else {
-                    this.resetBall();
-                    this.updateUI();
-                }
+            // Death
+            if (this.ball.y > this.renderer.height + 50) {
+                this.gameOver();
             }
         }
         
@@ -304,26 +283,6 @@ export class GameEngine {
             comboVal.innerText = this.combo;
         } else {
             comboEl.style.opacity = 0;
-        }
-
-        // Update lives HUD
-        const playerLivesEl = document.getElementById('player-lives');
-        const cpuLivesEl = document.getElementById('cpu-lives');
-        if (playerLivesEl) {
-            playerLivesEl.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'life-dot' + (i < this.playerLives ? '' : ' off');
-                playerLivesEl.appendChild(dot);
-            }
-        }
-        if (cpuLivesEl) {
-            cpuLivesEl.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                const dot = document.createElement('div');
-                dot.className = 'life-dot' + (i < this.cpuLives ? '' : ' off');
-                cpuLivesEl.appendChild(dot);
-            }
         }
     }
 }
