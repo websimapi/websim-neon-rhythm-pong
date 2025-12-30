@@ -1,7 +1,7 @@
 export class InputManager {
     constructor(canvas) {
         this.canvas = canvas;
-        this.pointerX = 0; // Normalized 0 to 1
+        this.pointerX = 0.5; // Normalized 0 to 1, start at center
         this.isDown = false;
         
         this.initListeners();

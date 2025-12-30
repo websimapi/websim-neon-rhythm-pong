@@ -55,7 +55,7 @@ startBtn.addEventListener('click', async () => {
     audio.resume();
     menu.classList.add('hidden');
     game.start();
-    loop();
+    requestAnimationFrame(loop);
 });
 
 // Restart Game
@@ -69,8 +69,11 @@ restartBtn.addEventListener('click', () => {
 let lastTime = 0;
 function loop(timestamp) {
     if (!lastTime) lastTime = timestamp;
-    const dt = (timestamp - lastTime) / 1000;
+    let dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
+
+    // Safety check to prevent NaN propagation or huge jumps
+    if (isNaN(dt) || dt > 0.1) dt = 0.016;
 
     if (game.running) {
         renderer.clear();

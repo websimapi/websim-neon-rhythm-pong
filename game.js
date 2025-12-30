@@ -32,6 +32,11 @@ export class GameEngine {
         this.multiplier = 1;
         this.updateUI();
         
+        // Reset positions
+        this.opponent.x = 0.5;
+        this.paddle.x = 0.5;
+        this.paddle.width = 0.2; // Reset size powerups
+        
         this.resetBall();
         
         // Hook audio
